@@ -14,6 +14,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedSmartmetersIndexRouteImport } from './routes/_authed/smartmeters.index'
+import { Route as AuthedSmartmetersIdRouteImport } from './routes/_authed/smartmeters.$id'
 
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
@@ -39,17 +40,24 @@ const AuthedSmartmetersIndexRoute = AuthedSmartmetersIndexRouteImport.update({
   path: '/smartmeters/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedSmartmetersIdRoute = AuthedSmartmetersIdRouteImport.update({
+  id: '/smartmeters/$id',
+  path: '/smartmeters/$id',
+  getParentRoute: () => AuthedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/smartmeters/$id': typeof AuthedSmartmetersIdRoute
   '/smartmeters/': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/': typeof AuthedIndexRoute
+  '/smartmeters/$id': typeof AuthedSmartmetersIdRoute
   '/smartmeters': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/_authed/': typeof AuthedIndexRoute
+  '/_authed/smartmeters/$id': typeof AuthedSmartmetersIdRoute
   '/_authed/smartmeters/': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro' | '/login' | '/smartmeters/'
+  fullPaths: '/' | '/cadastro' | '/login' | '/smartmeters/$id' | '/smartmeters/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/cadastro' | '/login' | '/' | '/smartmeters'
+  to: '/cadastro' | '/login' | '/' | '/smartmeters/$id' | '/smartmeters'
   id:
     | '__root__'
     | '/_authed'
     | '/cadastro'
     | '/login'
     | '/_authed/'
+    | '/_authed/smartmeters/$id'
     | '/_authed/smartmeters/'
   fileRoutesById: FileRoutesById
 }
@@ -117,16 +127,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSmartmetersIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/smartmeters/$id': {
+      id: '/_authed/smartmeters/$id'
+      path: '/smartmeters/$id'
+      fullPath: '/smartmeters/$id'
+      preLoaderRoute: typeof AuthedSmartmetersIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
+  AuthedSmartmetersIdRoute: typeof AuthedSmartmetersIdRoute
   AuthedSmartmetersIndexRoute: typeof AuthedSmartmetersIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
+  AuthedSmartmetersIdRoute: AuthedSmartmetersIdRoute,
   AuthedSmartmetersIndexRoute: AuthedSmartmetersIndexRoute,
 }
 
