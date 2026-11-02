@@ -9,50 +9,205 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedHistoricoRouteImport } from './routes/_authed/historico'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as AuthedSmartmetersIndexRouteImport } from './routes/_authed/smartmeters.index'
+import { Route as AuthedSmartmetersIdRouteImport } from './routes/_authed/smartmeters.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedIndexRoute = AuthedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedHistoricoRoute = AuthedHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedSmartmetersIndexRoute = AuthedSmartmetersIndexRouteImport.update({
+  id: '/smartmeters/',
+  path: '/smartmeters/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSmartmetersIdRoute = AuthedSmartmetersIdRouteImport.update({
+  id: '/smartmeters/$id',
+  path: '/smartmeters/$id',
+  getParentRoute: () => AuthedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthedIndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
+  '/historico': typeof AuthedHistoricoRoute
+  '/api/health': typeof ApiHealthRoute
+  '/smartmeters/$id': typeof AuthedSmartmetersIdRoute
+  '/smartmeters/': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
+  '/historico': typeof AuthedHistoricoRoute
+  '/api/health': typeof ApiHealthRoute
+  '/': typeof AuthedIndexRoute
+  '/smartmeters/$id': typeof AuthedSmartmetersIdRoute
+  '/smartmeters': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
+  '/_authed/historico': typeof AuthedHistoricoRoute
+  '/api/health': typeof ApiHealthRoute
+  '/_authed/': typeof AuthedIndexRoute
+  '/_authed/smartmeters/$id': typeof AuthedSmartmetersIdRoute
+  '/_authed/smartmeters/': typeof AuthedSmartmetersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/cadastro'
+    | '/login'
+    | '/historico'
+    | '/api/health'
+    | '/smartmeters/$id'
+    | '/smartmeters/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/cadastro'
+    | '/login'
+    | '/historico'
+    | '/api/health'
+    | '/'
+    | '/smartmeters/$id'
+    | '/smartmeters'
+  id:
+    | '__root__'
+    | '/_authed'
+    | '/cadastro'
+    | '/login'
+    | '/_authed/historico'
+    | '/api/health'
+    | '/_authed/'
+    | '/_authed/smartmeters/$id'
+    | '/_authed/smartmeters/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  CadastroRoute: typeof CadastroRoute
+  LoginRoute: typeof LoginRoute
+  ApiHealthRoute: typeof ApiHealthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/': {
+      id: '/_authed/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthedIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/historico': {
+      id: '/_authed/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof AuthedHistoricoRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/smartmeters/': {
+      id: '/_authed/smartmeters/'
+      path: '/smartmeters'
+      fullPath: '/smartmeters/'
+      preLoaderRoute: typeof AuthedSmartmetersIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/smartmeters/$id': {
+      id: '/_authed/smartmeters/$id'
+      path: '/smartmeters/$id'
+      fullPath: '/smartmeters/$id'
+      preLoaderRoute: typeof AuthedSmartmetersIdRouteImport
+      parentRoute: typeof AuthedRoute
     }
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedHistoricoRoute: typeof AuthedHistoricoRoute
+  AuthedIndexRoute: typeof AuthedIndexRoute
+  AuthedSmartmetersIdRoute: typeof AuthedSmartmetersIdRoute
+  AuthedSmartmetersIndexRoute: typeof AuthedSmartmetersIndexRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedHistoricoRoute: AuthedHistoricoRoute,
+  AuthedIndexRoute: AuthedIndexRoute,
+  AuthedSmartmetersIdRoute: AuthedSmartmetersIdRoute,
+  AuthedSmartmetersIndexRoute: AuthedSmartmetersIndexRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  CadastroRoute: CadastroRoute,
+  LoginRoute: LoginRoute,
+  ApiHealthRoute: ApiHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

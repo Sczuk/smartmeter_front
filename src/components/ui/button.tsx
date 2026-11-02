@@ -16,6 +16,11 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        lime: "bg-lime text-lime-foreground font-semibold hover:bg-lime/85",
+        pending: "bg-warn-soft text-warn font-semibold",
+        quiet: "border border-border bg-card font-semibold text-foreground hover:bg-muted",
+        danger: "bg-destructive text-destructive-foreground font-semibold hover:bg-destructive/90",
+        trash: "text-destructive hover:bg-destructive/10",
       },
       size: {
         default: "h-9 px-4 py-2",
