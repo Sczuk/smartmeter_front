@@ -40,13 +40,18 @@ function seedMeters(): MMeter[] {
 store.users.has("demo@smartmeter.app") ||
   store.users.set("demo@smartmeter.app", { name: "Conta Demo", email: "demo@smartmeter.app", password: "smartmeter123", meters: seedMeters() });
 
+function tokenEmail(t: unknown, prefix: string) {
+  if (typeof t !== "string" || !t.startsWith(prefix + ".")) return undefined;
+  try { return decodeURIComponent(escape(atob(t.split(".")[1] ?? ""))); } catch { return undefined; }
+}
+
 type Res = { status: number; json?: unknown };
 const ok = (json?: unknown, status = 200): Res => ({ status, json });
 
 function issueTokens(email: string) {
-  const access = `mock-a-${uid()}`, refresh = `mock-r-${uid()}`;
-  store.tokens.set(access, email);
-  store.tokens.set(refresh, email);
+  // Stateless tokens so they work across server instances.
+  const e = btoa(unescape(encodeURIComponent(email)));
+  const access = `mock-a.${e}.${uid()}`, refresh = `mock-r.${e}.${uid()}`;
   return { access_token: access, refresh_token: refresh, expires_in: 3600, refresh_expires_in: 60 * 60 * 24 * 30, token_type: "Bearer" };
 }
 
@@ -112,14 +117,14 @@ export function mockHandle(service: "register" | "energy", method: string, path:
       return ok(issueTokens(email), 201);
     }
     if (p === "/api/auth/refresh") {
-      const email = store.tokens.get(body?.refresh_token);
+      const email = tokenEmail(body?.refresh_token, "mock-r");
       if (!email) return { status: 401 };
-      store.tokens.delete(body.refresh_token);
       return ok(issueTokens(email));
     }
     if (p === "/api/auth/logout") { store.tokens.delete(body?.refresh_token); return { status: 204 }; }
   }
-  const email = token ? store.tokens.get(token) : undefined;
+  const email = tokenEmail(token, "mock-a");
+  if (email && !store.users.has(email)) store.users.set(email, { name: email === "demo@smartmeter.app" ? "Conta Demo" : email.split("@")[0]!, email, password: "", meters: seedMeters() });
   const user = email ? store.users.get(email) : undefined;
   if (!user) return { status: 401 };
   const meter = (id: string) => user.meters.find((m) => m.id === id);
