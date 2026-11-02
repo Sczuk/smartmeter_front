@@ -37,8 +37,11 @@ function seedMeters(): MMeter[] {
   ];
 }
 
-store.users.has("demo@smartmeter.app") ||
-  store.users.set("demo@smartmeter.app", { name: "Conta Demo", email: "demo@smartmeter.app", password: "smartmeter123", meters: seedMeters() });
+// Seeded lazily: random IDs are not allowed at module scope on the Worker runtime.
+function ensureDemo() {
+  if (!store.users.has("demo@smartmeter.app"))
+    store.users.set("demo@smartmeter.app", { name: "Conta Demo", email: "demo@smartmeter.app", password: "smartmeter123", meters: seedMeters() });
+}
 
 function tokenEmail(t: unknown, prefix: string) {
   if (typeof t !== "string" || !t.startsWith(prefix + ".")) return undefined;
@@ -101,6 +104,7 @@ function daily(m: MMeter, from: string, to: string, deviceId?: string) {
 }
 
 export function mockHandle(service: "register" | "energy", method: string, path: string, body: any, token?: string): Res {
+  ensureDemo();
   const url = new URL(path, "http://mock");
   const p = url.pathname;
   if (service === "register" && p.startsWith("/api/auth/")) {
