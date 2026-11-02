@@ -55,7 +55,7 @@ function SmartmetersPage() {
       <div className="grid gap-5 md:grid-cols-2">
         {[
           { icon: <Cpu className="h-5 w-5" />, label: "Smartmeters cadastrados", value: all.length, note: "Uma visão de toda a sua casa" },
-          { icon: <Plug className="h-5 w-5" />, label: "Dispositivos associados", value: totalDevices, note: `Distribuídos entre suas ${plural(all.length, "placa", "placas").replace(/^1 placas/, "1 placa")}` },
+          { icon: <Plug className="h-5 w-5" />, label: "Dispositivos associados", value: totalDevices, note: all.length === 1 ? "Em 1 placa" : `Distribuídos entre suas ${all.length} placas` },
         ].map((c) => (
           <Card key={c.label} className="flex items-center gap-4 p-5">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">{c.icon}</span>
