@@ -39,7 +39,8 @@ export function storeTokens(raw: any, remember?: boolean) {
   const rexp = Number(raw?.refresh_expires_in ?? raw?.refreshExpiresIn ?? 60 * 60 * 24 * 30);
   if (!at) return false;
   const persist = remember ?? getCookie(REMEMBER) !== "0";
-  const base = { httpOnly: true, sameSite: "lax" as const, secure: process.env["NODE_ENV"] === "production", path: "/" };
+  // Preview runs inside an iframe: cookies must be SameSite=None; Secure to be stored there.
+  const base = { httpOnly: true, sameSite: "none" as const, secure: true, path: "/" };
   setCookie(ACCESS, at, { ...base, ...(persist ? { maxAge: exp } : {}) });
   if (rt) setCookie(REFRESH, rt, { ...base, ...(persist ? { maxAge: rexp } : {}) });
   setCookie(REMEMBER, persist ? "1" : "0", { ...base, ...(persist ? { maxAge: rexp } : {}) });
@@ -47,7 +48,7 @@ export function storeTokens(raw: any, remember?: boolean) {
 }
 
 export function clearTokens() {
-  for (const c of [ACCESS, REFRESH, REMEMBER]) deleteCookie(c, { path: "/" });
+  for (const c of [ACCESS, REFRESH, REMEMBER]) deleteCookie(c, { path: "/", sameSite: "none", secure: true });
 }
 
 async function refresh(): Promise<boolean> {
