@@ -41,7 +41,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           const active = to === "/" ? path === "/" : path.startsWith(to);
           return (
             <Link key={to} to={to} onClick={onNavigate}
-              className={cn("flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors",
+              className={cn("flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-3 text-sm transition-colors",
                 active ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-muted")}>
               <Icon className="h-[18px] w-[18px]" />{label}
             </Link>
@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => setToday(fmtDateLong(spDateKey())), []);
   return (
     <div className="flex min-h-screen w-full">
-      <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 border-r border-border bg-sidebar lg:block">
+      <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 border-r border-border bg-sidebar lg:block">
         <SidebarBody />
       </aside>
       <Sheet open={open} onOpenChange={setOpen}>
