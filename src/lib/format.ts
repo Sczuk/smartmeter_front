@@ -34,7 +34,7 @@ export function normalizeDateKey(s: string) {
 }
 
 function keyToUTC(key: string) {
-  const [y, m, d] = normalizeDateKey(key).split("-").map(Number);
+  const [y = 1970, m = 1, d = 1] = normalizeDateKey(key).split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d));
 }
 export function addDays(key: string, n: number) {
@@ -72,8 +72,8 @@ export function fmtWeekdayLong(key: string) {
 }
 export function fmtMonthYear(key: string) {
   const d = keyToUTC(key);
-  const m = MONTHS_LONG[d.getUTCMonth()];
-  return `${m[0].toUpperCase()}${m.slice(1)} ${d.getUTCFullYear()}`;
+  const m = MONTHS_LONG[d.getUTCMonth()] ?? "";
+  return `${m.charAt(0).toUpperCase()}${m.slice(1)} ${d.getUTCFullYear()}`;
 }
 /** "13 – 19 out. 2026" (handles month/year changes) */
 export function fmtRange(from: string, to: string) {
@@ -102,7 +102,7 @@ export const shortId = (id: string) => (id.length > 8 ? `${id.slice(0, 8)}…` :
 
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "")).toUpperCase() || "?";
 }
 
 /** Insert null breaks where consecutive samples are more than 2 min apart (no interpolation). */
@@ -110,12 +110,13 @@ export function withGaps(points: { at: string; powerW: number }[], maxGapMs = 2 
   const sorted = [...points].sort((a, b) => +new Date(a.at) - +new Date(b.at));
   const out: { t: number; powerW: number | null }[] = [];
   for (let i = 0; i < sorted.length; i++) {
-    const t = +new Date(sorted[i].at);
+    const cur = sorted[i]!;
+    const t = +new Date(cur.at);
     if (i > 0) {
-      const prev = +new Date(sorted[i - 1].at);
+      const prev = +new Date(sorted[i - 1]!.at);
       if (t - prev > maxGapMs) out.push({ t: prev + 1, powerW: null });
     }
-    out.push({ t, powerW: sorted[i].powerW });
+    out.push({ t, powerW: cur.powerW });
   }
   return out;
 }
@@ -128,7 +129,7 @@ export function weekWindow(offset: number, today = spDateKey()) {
 /** Calendar month shifted by `offset`, clamped to yesterday. */
 export function monthWindow(offset: number, today = spDateKey()) {
   const yesterday = addDays(today, -1);
-  const [y, m] = yesterday.split("-").map(Number);
+  const [y = 1970, m = 1] = yesterday.split("-").map(Number);
   const d = new Date(Date.UTC(y, m - 1 + offset, 1));
   const from = d.toISOString().slice(0, 10);
   const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);

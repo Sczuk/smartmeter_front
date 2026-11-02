@@ -11,17 +11,17 @@ type Service = "register" | "energy";
 type Res = { status: number; json?: any };
 
 function useMocks() {
-  return process.env.USE_MOCKS === "true" || !process.env.REGISTER_API_URL;
+  return process.env["USE_MOCKS"] === "true" || !process.env["REGISTER_API_URL"];
 }
 
 async function transport(service: Service, method: string, path: string, body?: unknown, token?: string): Promise<Res> {
   if (useMocks()) return mockHandle(service, method, path, body, token);
-  const base = service === "register" ? process.env.REGISTER_API_URL! : `${process.env.ENERGY_API_URL}/energy-iot`;
+  const base = service === "register" ? process.env["REGISTER_API_URL"]! : `${process.env["ENERGY_API_URL"]}/energy-iot`;
   const headers: Record<string, string> = { accept: "application/json" };
   if (body !== undefined) headers["content-type"] = "application/json";
-  if (token) headers.authorization = `Bearer ${token}`;
+  if (token) headers["authorization"] = `Bearer ${token}`;
   try {
-    const r = await fetch(base.replace(/\/$/, "") + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+    const r = await fetch(base.replace(/\/$/, "") + path, { method, headers, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
     const text = await r.text();
     let json: any;
     try { json = text ? JSON.parse(text) : undefined; } catch { json = undefined; }
@@ -39,7 +39,7 @@ export function storeTokens(raw: any, remember?: boolean) {
   const rexp = Number(raw?.refresh_expires_in ?? raw?.refreshExpiresIn ?? 60 * 60 * 24 * 30);
   if (!at) return false;
   const persist = remember ?? getCookie(REMEMBER) !== "0";
-  const base = { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/" };
+  const base = { httpOnly: true, sameSite: "lax" as const, secure: process.env["NODE_ENV"] === "production", path: "/" };
   setCookie(ACCESS, at, { ...base, ...(persist ? { maxAge: exp } : {}) });
   if (rt) setCookie(REFRESH, rt, { ...base, ...(persist ? { maxAge: rexp } : {}) });
   setCookie(REMEMBER, persist ? "1" : "0", { ...base, ...(persist ? { maxAge: rexp } : {}) });

@@ -3,7 +3,7 @@ import type { DeviceType } from "./types";
 
 type MDevice = {
   id: string; name: string; type: DeviceType; channels: number[];
-  basePower: number; on: boolean; pending?: { target: boolean; at: number };
+  basePower: number; on: boolean; pending?: { target: boolean; at: number } | undefined;
 };
 type MMeter = { id: string; name: string; mac: string; devices: MDevice[]; seed: number };
 type MUser = { name: string; email: string; password: string; meters: MMeter[] };
@@ -129,7 +129,7 @@ export function mockHandle(service: "register" | "energy", method: string, path:
     if (method === "GET" && p === "/api/smartmeter/smartmeters")
       return ok({ name: user.name, smartmeters: user.meters.map((m) => ({ id: m.id, name: m.name, macAddress: m.mac, amountConnectedDevices: m.devices.length })) });
     if (method === "GET" && (r = p.match(/^\/api\/smartmeter\/findSmartmeter\/smartmeterId\/([^/]+)$/))) {
-      const m = meter(r[1]); if (!m) return { status: 404 };
+      const m = meter(r[1]!); if (!m) return { status: 404 };
       return ok({ id: m.id, name: m.name, macAddress: m.mac, userName: user.name,
         devices: m.devices.map((d) => ({ id: d.id, deviceName: d.name, type: d.type, channels: d.channels, smartmeterName: m.name })) });
     }
@@ -145,14 +145,14 @@ export function mockHandle(service: "register" | "energy", method: string, path:
       user.meters.splice(i, 1); return { status: 204 };
     }
     if (method === "POST" && (r = p.match(/^\/api\/device\/smartmeterId\/([^/]+)\/create$/))) {
-      const m = meter(r[1]); if (!m) return { status: 404 };
+      const m = meter(r[1]!); if (!m) return { status: 404 };
       if (!body?.name || !["OUTLET", "SWITCH"].includes(body?.type)) return { status: 400 };
       const d: MDevice = { id: uid(), name: body.name, type: body.type, channels: [pinCursor++, pinCursor++, pinCursor++], basePower: body.type === "SWITCH" ? 60 : 300, on: false };
       m.devices.push(d);
       return ok({ id: d.id, deviceName: d.name, type: d.type, channels: d.channels, smartmeterName: m.name }, 201);
     }
     if (method === "DELETE" && (r = p.match(/^\/api\/device\/delete\/deviceId\/([^/]+)\/smartmeterId\/([^/]+)$/))) {
-      const m = meter(r[2]); if (!m) return { status: 404 };
+      const m = meter(r[2]!); if (!m) return { status: 404 };
       const i = m.devices.findIndex((d) => d.id === r![1]); if (i < 0) return { status: 404 };
       m.devices.splice(i, 1); return { status: 204 };
     }
@@ -161,7 +161,7 @@ export function mockHandle(service: "register" | "energy", method: string, path:
 
   // energy (paths relative to /energy-iot)
   if ((r = p.match(/^\/measurements\/smartmeter\/([^/]+)\/devices\/latest$/))) {
-    const m = meter(r[1]); if (!m) return { status: 404 };
+    const m = meter(r[1]!); if (!m) return { status: 404 };
     const measured = new Date(Math.floor(Date.now() / 60000) * 60000).toISOString();
     return ok({ measurements: m.devices.filter((d) => d.basePower !== 300 && d.basePower !== 60 || d.on || d.pending).map((d) => {
       settle(d);
@@ -170,11 +170,11 @@ export function mockHandle(service: "register" | "energy", method: string, path:
     }) });
   }
   if ((r = p.match(/^\/measurements\/smartmeter\/([^/]+)\/power$/))) {
-    const m = meter(r[1]); if (!m) return { status: 404 };
+    const m = meter(r[1]!); if (!m) return { status: 404 };
     return ok(powerSeries(m, Number(url.searchParams.get("hours") ?? 48)));
   }
   if ((r = p.match(/^\/measurements\/smartmeter\/([^/]+)\/consumption\/daily$/))) {
-    const m = meter(r[1]); if (!m) return { status: 404 };
+    const m = meter(r[1]!); if (!m) return { status: 404 };
     return ok(daily(m, url.searchParams.get("from")!, url.searchParams.get("to")!, url.searchParams.get("deviceId") || undefined));
   }
   if (method === "POST" && (r = p.match(/^\/devices\/control\/(turnOn|turnOff)\/([^/]+)$/))) {

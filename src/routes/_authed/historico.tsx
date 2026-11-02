@@ -13,14 +13,14 @@ import { fmt2, fmtDateLong, fmtDayMonth, fmtMonthYear, fmtRange, fmtWeekShort, f
 import { errorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
-type Search = { sm?: string; device?: string; period: "semana" | "mes"; offset: number };
+type Search = { sm?: string | undefined; device?: string | undefined; period: "semana" | "mes"; offset: number };
 
 export const Route = createFileRoute("/_authed/historico")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    sm: typeof s.sm === "string" ? s.sm : undefined,
-    device: typeof s.device === "string" ? s.device : undefined,
-    period: s.period === "mes" ? "mes" : "semana",
-    offset: Math.min(0, Math.trunc(Number(s.offset) || 0)),
+    sm: typeof s["sm"] === "string" ? s["sm"] : undefined,
+    device: typeof s["device"] === "string" ? s["device"] : undefined,
+    period: s["period"] === "mes" ? "mes" : "semana",
+    offset: Math.min(0, Math.trunc(Number(s["offset"]) || 0)),
   }),
   head: () => ({
     meta: [
@@ -108,7 +108,7 @@ function HistoryBody({ loading, error, onRetry, data, from, to, subtitle }: {
   const total = data.reduce((s, d) => s + d.kwh, 0);
   const avg = data.length ? total / data.length : null;
   const max = data.length ? data.reduce((a, b) => (b.kwh > a.kwh ? b : a)) : null;
-  const lastAvailable = data.length ? data[data.length - 1].date : null;
+  const lastAvailable = data.length ? data[data.length - 1]!.date : null;
   const chart = days.map((k) => ({ k, kwh: byDay.get(k) ?? null }));
   const many = days.length > 10;
 

@@ -13,7 +13,7 @@ import { addDays, fmt2, fmtDayMonth, fmtInt, fmtTime, isStale, minutesAgo, spDat
 import { errorMessage } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authed/")({
-  validateSearch: (s: Record<string, unknown>): { sm?: string } => (typeof s.sm === "string" ? { sm: s.sm } : {}),
+  validateSearch: (s: Record<string, unknown>): { sm?: string } => (typeof s["sm"] === "string" ? { sm: s["sm"] } : {}),
   head: () => ({
     meta: [
       { title: "Visão geral — SmartMeter" },
@@ -154,7 +154,7 @@ function OverviewBody({ id }: { id: string }) {
 
 function PowerChart({ points }: { points: { at: string; powerW: number }[] }) {
   const data = useMemo(() => withGaps(points), [points]);
-  const domain: [number, number] = [data[0].t, data[data.length - 1].t];
+  const domain: [number, number] = [data[0]?.t ?? 0, data[data.length - 1]?.t ?? 0];
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 5, right: 4, left: 0, bottom: 0 }}>

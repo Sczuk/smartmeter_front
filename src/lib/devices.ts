@@ -1,6 +1,6 @@
 import type { Device, Measurement } from "./types";
 
-export type DeviceRow = Device & { m?: Measurement };
+export type DeviceRow = Device & { m?: Measurement | undefined };
 
 export function joinDevices(devices: Device[], ms: Measurement[] | undefined): DeviceRow[] {
   const map = new Map((ms ?? []).map((m) => [m.deviceId, m]));

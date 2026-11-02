@@ -21,6 +21,6 @@ export const powerQuery = (id: string) =>
 export const dailyQuery = (id: string, from: string, to: string, deviceId?: string) =>
   queryOptions({
     queryKey: ["daily", id, from, to, deviceId ?? ""],
-    queryFn: () => getDaily({ data: { id, from, to, deviceId } }),
+    queryFn: () => getDaily({ data: { id, from, to, ...(deviceId ? { deviceId } : {}) } }),
     enabled: !!id,
   });
