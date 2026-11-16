@@ -2,7 +2,8 @@
 // attaches the Bearer token from httpOnly cookies and refreshes once on 401.
 import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import { mockHandle } from "./mock.server";
-import { assertBackendConfig, mocksEnabled } from "./env.server";
+import { assertBackendConfig, isProduction, mocksEnabled } from "./env.server";
+import { cookieAttrs, singleFlight, type RefreshResult } from "./session";
 
 export const ACCESS = "sm_at";
 export const REFRESH = "sm_rt";
@@ -34,6 +35,10 @@ async function transport(service: Service, method: string, path: string, body?: 
   }
 }
 
+function attrs() {
+  return cookieAttrs({ production: isProduction(), sameSite: process.env["COOKIE_SAMESITE"], secure: process.env["COOKIE_SECURE"] });
+}
+
 export function storeTokens(raw: any, remember?: boolean) {
   const at = raw?.access_token ?? raw?.accessToken;
   const rt = raw?.refresh_token ?? raw?.refreshToken;
@@ -41,8 +46,7 @@ export function storeTokens(raw: any, remember?: boolean) {
   const rexp = Number(raw?.refresh_expires_in ?? raw?.refreshExpiresIn ?? 60 * 60 * 24 * 30);
   if (!at) return false;
   const persist = remember ?? getCookie(REMEMBER) !== "0";
-  // Preview runs inside an iframe: cookies must be SameSite=None; Secure to be stored there.
-  const base = { httpOnly: true, sameSite: "none" as const, secure: true, path: "/" };
+  const base = attrs();
   setCookie(ACCESS, at, { ...base, ...(persist ? { maxAge: exp } : {}) });
   if (rt) setCookie(REFRESH, rt, { ...base, ...(persist ? { maxAge: rexp } : {}) });
   setCookie(REMEMBER, persist ? "1" : "0", { ...base, ...(persist ? { maxAge: rexp } : {}) });
@@ -50,15 +54,25 @@ export function storeTokens(raw: any, remember?: boolean) {
 }
 
 export function clearTokens() {
-  for (const c of [ACCESS, REFRESH, REMEMBER]) deleteCookie(c, { path: "/", sameSite: "none", secure: true });
+  const a = attrs();
+  for (const c of [ACCESS, REFRESH, REMEMBER]) deleteCookie(c, a);
 }
 
-async function refresh(): Promise<boolean> {
-  const rt = getCookie(REFRESH);
-  if (!rt) return false;
+const sharedRefresh = singleFlight(async (rt): Promise<RefreshResult> => {
   const r = await transport("register", "POST", "/api/auth/refresh", { refresh_token: rt });
-  if (r.status >= 200 && r.status < 300 && storeTokens(r.json)) return true;
-  return false;
+  const at = r.json?.access_token ?? r.json?.accessToken;
+  if (r.status >= 200 && r.status < 300 && at) return { ok: true, raw: r.json };
+  // Only 400/401/403 mean the refresh token is really dead; network/5xx keep the session.
+  return { ok: false, definitive: r.status === 400 || r.status === 401 || r.status === 403 };
+});
+
+/** Returns the new access token, "keep" on transient failure, or null when the session is dead. */
+async function refresh(): Promise<string | null | "keep"> {
+  const rt = getCookie(REFRESH);
+  if (!rt) return null;
+  const res = await sharedRefresh(rt);
+  if (res.ok) { storeTokens(res.raw); return res.raw.access_token ?? res.raw.accessToken; }
+  return res.definitive ? null : "keep";
 }
 
 export class ApiError extends Error {
@@ -68,11 +82,17 @@ export class ApiError extends Error {
 /** Authenticated call. Throws ApiError on non-2xx. */
 export async function api<T = any>(service: Service, method: string, path: string, body?: unknown): Promise<T> {
   let token = getCookie(ACCESS);
-  if (!token && getCookie(REFRESH)) { if (await refresh()) token = getCookie(ACCESS); }
+  if (!token && getCookie(REFRESH)) {
+    const n = await refresh();
+    if (n === "keep") throw new ApiError(503);
+    if (n) token = n;
+  }
   let r = await transport(service, method, path, body, token);
   if (r.status === 401) {
-    if (await refresh()) {
-      r = await transport(service, method, path, body, getCookie(ACCESS));
+    const n = await refresh();
+    if (n === "keep") throw new ApiError(503);
+    if (n) {
+      r = await transport(service, method, path, body, n);
     } else {
       clearTokens();
       throw new ApiError(401);

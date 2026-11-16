@@ -16,3 +16,4 @@
 - Pure formatting/domain helpers live in `src/lib/format.ts` and `src/lib/devices.ts` and are covered by `src/test/domain.test.ts`.
 - Protected pages live under the `_authed` pathless layout, which checks the session cookie in `beforeLoad`.
 - Production build uses Nitro preset node-server (Railway, `npm start`). Why: deploy target is Node, not Workers.
+- Session cookies come from `cookieAttrs()` in `src/lib/session.ts` (HttpOnly, Path=/, Lax; Secure in production; `COOKIE_SAMESITE=none` only for the embedded preview) and refresh goes through `singleFlight`. Why: first-party prod defaults, no concurrent refresh-token reuse.
