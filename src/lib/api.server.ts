@@ -8,6 +8,7 @@ import { cookieAttrs, singleFlight, type RefreshResult } from "./session";
 export const ACCESS = "sm_at";
 export const REFRESH = "sm_rt";
 export const REMEMBER = "sm_rm";
+const REQUEST_TIMEOUT_MS = 15_000;
 
 type Service = "register" | "energy";
 type Res = { status: number; json?: any };
@@ -24,12 +25,21 @@ async function transport(service: Service, method: string, path: string, body?: 
   if (body !== undefined) headers["content-type"] = "application/json";
   if (token) headers["authorization"] = `Bearer ${token}`;
   try {
-    const r = await fetch(base.replace(/\/$/, "") + path, { method, headers, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    const r = await fetch(base.replace(/\/$/, "") + path, {
+      method,
+      headers,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
     const text = await r.text();
     let json: any;
     try { json = text ? JSON.parse(text) : undefined; } catch { json = undefined; }
     return { status: r.status, json };
   } catch (e) {
+    if (e instanceof Error && e.name === "TimeoutError") {
+      console.error("backend request timed out", service, path);
+      return { status: 504 };
+    }
     console.error("backend unreachable", service, path, e);
     return { status: 503 };
   }
