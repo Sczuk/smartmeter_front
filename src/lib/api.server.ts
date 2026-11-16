@@ -2,6 +2,7 @@
 // attaches the Bearer token from httpOnly cookies and refreshes once on 401.
 import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server";
 import { mockHandle } from "./mock.server";
+import { assertBackendConfig, mocksEnabled } from "./env.server";
 
 export const ACCESS = "sm_at";
 export const REFRESH = "sm_rt";
@@ -11,11 +12,12 @@ type Service = "register" | "energy";
 type Res = { status: number; json?: any };
 
 function useMocks() {
-  return process.env["USE_MOCKS"] === "true" || !process.env["REGISTER_API_URL"];
+  return mocksEnabled();
 }
 
 async function transport(service: Service, method: string, path: string, body?: unknown, token?: string): Promise<Res> {
   if (useMocks()) return mockHandle(service, method, path, body, token);
+  assertBackendConfig();
   const base = service === "register" ? process.env["REGISTER_API_URL"]! : `${process.env["ENERGY_API_URL"]}/energy-iot`;
   const headers: Record<string, string> = { accept: "application/json" };
   if (body !== undefined) headers["content-type"] = "application/json";

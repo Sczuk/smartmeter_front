@@ -2,6 +2,19 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { assertBackendConfig, isProduction } from "./lib/env.server";
+
+// Fail fast on Node (Railway): refuse to boot in production without backend URLs.
+// Skipped on Workers, where env is only available inside handlers.
+const onWorkers = (globalThis as any).navigator?.userAgent === "Cloudflare-Workers";
+if (!onWorkers && isProduction()) {
+  try {
+    assertBackendConfig();
+  } catch (e) {
+    console.error((e as Error).message);
+    process.exit(1);
+  }
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
