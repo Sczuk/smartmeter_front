@@ -5,7 +5,7 @@ export type CookieAttrs = { httpOnly: true; path: "/"; sameSite: "lax" | "none";
  * Production: Secure + SameSite=Lax (first-party). Local HTTP dev: Secure=false.
  * COOKIE_SAMESITE=none is an explicit opt-in for embedded previews (forces Secure, as browsers require).
  */
-export function cookieAttrs(env: { production: boolean; sameSite?: string; secure?: string }): CookieAttrs {
+export function cookieAttrs(env: { production: boolean; sameSite?: string | undefined; secure?: string | undefined }): CookieAttrs {
   const sameSite = env.sameSite?.toLowerCase() === "none" ? "none" : "lax";
   const secure = env.production || sameSite === "none" || env.secure === "true";
   return { httpOnly: true, path: "/", sameSite, secure };
